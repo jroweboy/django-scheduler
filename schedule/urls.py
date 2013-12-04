@@ -56,6 +56,12 @@ url(r'^calendar/(?P<calendar_slug>[-\w]+)/$',
     name = "calendar_home",
     ),
 
+url(r'^calendar/(?P<calendar_slug>[-\w]+)/ajax/$', 
+    'schedule.views.calendar_ajax_view',
+    name="ajax_calendar",
+    kwargs={'periods': [Month]},
+    ),
+
 #Event Urls
 url(r'^event/create/(?P<calendar_slug>[-\w]+)/$',
     'schedule.views.create_or_edit_event',

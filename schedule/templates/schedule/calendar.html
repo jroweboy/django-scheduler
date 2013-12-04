@@ -2,6 +2,65 @@
 {% load i18n %}
 {% load scheduletags i18n %}
 
+{% block extra_head %}
+{{ block.super }}
+<script>
+
+
+
+$(document).ready(function() {
+
+    // page is now ready, initialize the calendar...
+
+    $('#calendar').fullCalendar({
+        header : {
+            left : 'today prev,next',
+            center : 'title',
+            right : 'month,agendaWeek,agendaDay'
+        },
+        slotMinutes : 15,
+        minTime : 8,
+        maxTime : 22,
+        height : 650,
+        defaultView : 'agendaWeek',
+        allDayDefault: false,
+
+        eventSources: [
+
+        // your event source
+        {
+            url: '{% url "ajax_calendar" calendar.slug %}',
+            type: 'GET',
+            error: function(xhr, status, error) {
+                var err = JSON.parse(xhr.responseText);
+                alert('AJAX Error: ' + err);
+            },
+            color: 'blue',
+            textColor: 'white'
+        },
+
+        // any other sources...
+        ], 
+   })
+
+});
+
+</script>
+
+{% endblock %}
+
+{% block body %}
+
+<div id="calendar"></div>
+
+{% endblock %}
+
+
+
+
+
+
+{% comment %}
 
 {% block body %}
 
@@ -27,3 +86,5 @@
 <div><i>{% trans "Now see docstring for schedule.views.calendar" %}</i></div>
 
 {% endblock %}
+
+{% endcomment %}

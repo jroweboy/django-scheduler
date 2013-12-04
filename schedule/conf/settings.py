@@ -43,5 +43,14 @@ if not GET_EVENTS_FUNC:
 
     GET_EVENTS_FUNC = get_events
 
+from django.db.models import Q
+def GET_EVENTS_AJAX(request, calender, start, end):
+    '''
+    returns all events such that the event starts before the end of the Period
+    or the event ends before the start of the Period
+    ''' 
+    return calender.event_set.filter(Q(start__lt=end) | Q(end__gt=start))
+
+
 # URL to redirect to to after an occurrence is canceled
 OCCURRENCE_CANCEL_REDIRECT = getattr(settings, 'OCCURRENCE_CANCEL_REDIRECT', None)

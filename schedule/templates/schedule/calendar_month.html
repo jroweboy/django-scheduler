@@ -1,7 +1,37 @@
 {% extends "schedule/base.html" %}
 {% load scheduletags i18n %}
 
- {% block body %}
+{% block extra_head %}
+{{ block.super }}
+<script>
+
+$(document).ready(function() {
+
+    // page is now ready, initialize the calendar...
+
+    $('#calendar').fullCalendar({
+        header : {
+            left : 'today prev,next',
+            center : 'title',
+            right : 'month,agendaWeek,agendaDay'
+        },
+    })
+
+});
+
+</script>
+
+{% endblock %}
+
+{% block body %}
+
+<div id="calendar"></div>
+
+{% endblock %}
+
+
+{% comment %}
+{% block body %}
 {% include "schedule/_dialogs.html" %}
 <div class="tablewrapper">
   <div class="calendarname">{{ calendar.name }}</div>
@@ -22,3 +52,4 @@
   </a>
 </div>
 {% endblock %}
+{% endcomment %}

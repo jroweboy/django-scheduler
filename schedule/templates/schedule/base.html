@@ -4,8 +4,17 @@
 {{ block.super }}
 <link rel="stylesheet" href="{% static "schedule/css/schedule.css" %}" type="text/css" media="screen" />
 <link rel="stylesheet" href="{% static "schedule/css/jquery-ui.css" %}" type="text/css" media="screen" />
-<script type="text/javascript" src="{% static "schedule/js/jquery.js" %}"></script>
+
+{# swapped to using the jquery provided in full calender #}
+<script type="text/javascript" src="{% static "schedule/js/jquery.min.js" %}"></script>
 <script type="text/javascript" src="{% static "schedule/js/jquery-ui.js" %}"></script>
+
+{# include the requirements for fullcalendar #}
+
+<link rel='stylesheet' type='text/css' href='{% static "schedule/css/fullcalendar.css" %}' />
+<script type='text/javascript' src='{% static "schedule/js/fullcalendar.min.js" %}'></script>
+<script type="text/javascript" src='{% static "schedule/js/jquery-ui.custom.min.js" %}'></script>
+
 {% endblock %}
 
 {% block rtab_id %}id="schedule_tab"{% endblock %}

@@ -1,8 +1,9 @@
 import datetime
+from vobject.icalendar import utc
 from urllib import quote
 from django.contrib.auth.decorators import login_required
 
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render_to_response, get_object_or_404, render
 from django.utils import timezone
 from django.http import HttpResponseRedirect, Http404
 from django.template import RequestContext
@@ -11,11 +12,15 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.generic.edit import DeleteView
 
-from schedule.conf.settings import GET_EVENTS_FUNC, OCCURRENCE_CANCEL_REDIRECT
+from schedule.conf.settings import GET_EVENTS_FUNC, OCCURRENCE_CANCEL_REDIRECT, GET_EVENTS_AJAX
 from schedule.forms import EventForm, OccurrenceForm
 from schedule.models import Calendar, Occurrence, Event
 from schedule.periods import weekday_names
 from schedule.utils import check_event_permissions, coerce_date_dict
+
+# load in json as perscribed at http://stackoverflow.com/a/712799/745719
+try: import simplejson as json
+except ImportError: import json
 
 
 def calendar(request, calendar_slug, template='schedule/calendar.html'):
@@ -31,9 +36,37 @@ def calendar(request, calendar_slug, template='schedule/calendar.html'):
         The Calendar object designated by the ``calendar_slug``.
     """
     calendar = get_object_or_404(Calendar, slug=calendar_slug)
-    return render_to_response(template, {
-        "calendar": calendar,
-    }, context_instance=RequestContext(request))
+    return render(request, template, {"calendar": calendar})
+
+def calendar_ajax_view(request, calendar_slug, periods=None,):
+    """ 
+    This view was created to draw events for a period and return them
+    in JSON format to full calendar
+    """
+
+    calendar = get_object_or_404(Calendar, slug=calendar_slug)
+    # get the timestamp from start and end 
+    try :
+        start = datetime.datetime.fromtimestamp(float(request.GET['start']), utc)
+        end = datetime.datetime.fromtimestamp(float(request.GET['end']), utc)
+    except:
+        raise Http404
+
+    event_list = GET_EVENTS_AJAX(request, calendar, start, end)
+
+    occurrence_list = [ occurence for event in event_list 
+                                  for occurence in event.get_occurrences(start, end)]
+    #import pdb; pdb.set_trace()
+    #import calendar
+    # convert the start and end times to as standard format that Full Calendar understands
+    for a in occurrence_list:
+        a.start = a.start.isoformat() #calendar.timegm(a.start.utctimetuple())
+        a.end = a.end.isoformat()
+    return render_to_response('schedule/event_feed.js',
+                                context_instance=RequestContext(request, 
+                                    { 'events': occurrence_list, }
+                                ),
+                                mimetype='application/json')
 
 def calendar_by_periods(request, calendar_slug, periods=None,
     template_name="schedule/calendar_by_period.html"):
