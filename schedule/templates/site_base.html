@@ -22,6 +22,13 @@
 
     <body>
     <h3 id="demo">This is a demo of a django-schedule calendar</h3>
+    <div style="float: right">
+        {% if user.is_authenticated %}
+        <a href="{% url 'logout' %}?next={% firstof request.get_full_path|urlencode '/' %}">{% trans "Logout" %}</a>
+        {% else %}
+        <a href="{% url 'login' %}?next={% firstof request.get_full_path|urlencode '/' %}">{% trans "Login" %}</a>
+        {% endif %}
+    </div>
     <p style="clear:both"/>
 
         <div id="body">

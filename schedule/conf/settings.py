@@ -49,7 +49,7 @@ def GET_EVENTS_AJAX(request, calender, start, end):
     returns all events such that the event starts before the end of the Period
     or the event ends before the start of the Period
     ''' 
-    return calender.event_set.filter(Q(start__lt=end) | Q(end__gt=start))
+    return calender.event_set.filter(start__lt=end, end__gt=start)
 
 
 # URL to redirect to to after an occurrence is canceled

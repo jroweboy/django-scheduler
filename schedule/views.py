@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.utils import timezone
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404, HttpResponseForbidden, HttpResponse, HttpResponseBadRequest
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.shortcuts import render
@@ -18,13 +18,26 @@ from schedule.models import Calendar, Occurrence, Event
 from schedule.periods import weekday_names
 from schedule.utils import check_event_permissions, coerce_date_dict
 
+# TODO: make guardian optional for those that don't care about calendar permissions
+from guardian.shortcuts import get_objects_for_user
+
 # load in json as perscribed at http://stackoverflow.com/a/712799/745719
 try: import simplejson as json
 except ImportError: import json
 
+def calendars_for_user(request, template='schedule/calendar.html'):
+    """
+    This view is used to render all of the calendars that a user has permission to 
+    view. It will then render the calendar-functions.js to include their permissions
+    """
+    pass
 
+@login_required
 def calendar(request, calendar_slug, template='schedule/calendar.html'):
     """
+    TODO: This function is being repurposed. Explain what the changes are and move the
+    original information this function provided elsewhere
+
     This view returns a calendar.  This view should be used if you are
     interested in the meta data of a calendar, not if you want to display a
     calendar.  It is suggested that you use calendar_by_periods if you would
@@ -35,8 +48,23 @@ def calendar(request, calendar_slug, template='schedule/calendar.html'):
     ``calendar``
         The Calendar object designated by the ``calendar_slug``.
     """
+
     calendar = get_object_or_404(Calendar, slug=calendar_slug)
-    return render(request, template, {"calendar": calendar})
+
+    # TODO Support per calendar allow_anon permissions
+    if request.user.has_perm('view_calendar',calendar):
+        js = render_to_response('schedule/calendar-functions.js',
+                            {},
+                            context_instance=RequestContext(request),
+                            content_type='application/json')
+        event_form = EventForm()
+        return render(request, template, 
+                    {
+                        "calendar": calendar, 
+                        "calendar_functions": js,
+                        "event_form": event_form,
+                    })
+    return HttpResponseForbidden()
 
 def calendar_ajax_view(request, calendar_slug, periods=None,):
     """ 
@@ -47,9 +75,10 @@ def calendar_ajax_view(request, calendar_slug, periods=None,):
     calendar = get_object_or_404(Calendar, slug=calendar_slug)
     # get the timestamp from start and end 
     try :
-        start = datetime.datetime.fromtimestamp(float(request.GET['start']), utc)
-        end = datetime.datetime.fromtimestamp(float(request.GET['end']), utc)
+        start = datetime.datetime.fromtimestamp(float(request.POST['start']), utc)
+        end = datetime.datetime.fromtimestamp(float(request.POST['end']), utc)
     except:
+        print "Raised that 404!"
         raise Http404
 
     event_list = GET_EVENTS_AJAX(request, calendar, start, end)
@@ -67,6 +96,27 @@ def calendar_ajax_view(request, calendar_slug, periods=None,):
                                     { 'events': occurrence_list, }
                                 ),
                                 mimetype='application/json')
+
+def ajax_create_event(request, calendar_slug):
+    if not request.is_ajax() or not request.POST:
+        return HttpResponseBadRequest()
+    form = EventForm(data=request.POST)
+    if form.is_valid():
+        event = form.save(commit=False)
+        import pdb; pdb.set_trace()
+        event.creator = request.user
+        calendar = get_object_or_404(Calendar, slug=calendar_slug)
+        event.calendar = calendar
+        event.save()
+        return HttpResponse()
+    else:
+        return HttpResponseBadRequest(json.dumps(form.errors), content_type="application/json")
+
+def ajax_edit_event(request, calendar_slug):
+    return HttpResponse(json.dumps({"success": True}), content_type="application/json")
+
+def ajax_delete_event(request, calendar_slug):
+    return HttpResponse(json.dumps({"success": True}), content_type="application/json")
 
 def calendar_by_periods(request, calendar_slug, periods=None,
     template_name="schedule/calendar_by_period.html"):

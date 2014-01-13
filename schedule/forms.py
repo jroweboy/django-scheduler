@@ -7,9 +7,9 @@ import time
 
 class SpanForm(forms.ModelForm):
 
-    start = forms.DateTimeField(label=_("start"),
+    start = forms.DateTimeField(label=_("Start time:"),
                                 widget=forms.SplitDateTimeWidget)
-    end = forms.DateTimeField(label=_("end"),
+    end = forms.DateTimeField(label=_("End time:"),
                               widget=forms.SplitDateTimeWidget, help_text = _("The end time must be later than start time."))
 
     def clean_end(self):
@@ -25,6 +25,12 @@ class EventForm(SpanForm):
     end_recurring_period = forms.DateTimeField(label=_("End recurring period"),
                                                help_text = _("This date is ignored for one time only events."), required=False)
     
+    def clean(self):
+        super(EventForm, self).clean()
+        # see if this calendar is not allowed to have overlapping events (ie used for scheduling locations or resources)
+        # import pdb; pdb.set_trace()
+        return self.cleaned_data
+
     class Meta:
         model = Event
         exclude = ('creator', 'created_on', 'calendar')

@@ -55,6 +55,13 @@ USE_TZ = True
 # Example: "/var/www/example.com/media/"
 MEDIA_ROOT = PROJECT_PATH + '/media/'
 
+# Required for Django Guardian
+ANONYMOUS_USER_ID = -1
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend', # default
+    'guardian.backends.ObjectPermissionBackend',
+)
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -130,6 +137,9 @@ INSTALLED_APPS = (
     'schedule',
     'django_nose',
     'django_coverage',
+    # Comment if you won't need django guardian based permissions
+    'guardian',
+
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )

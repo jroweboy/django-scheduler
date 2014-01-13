@@ -9,6 +9,9 @@ from schedule.feeds import CalendarICalendar
 from schedule.periods import Year, Month, Week, Day
 from schedule.views import DeleteEventView
 
+# included for using the admin pages
+from django.contrib import admin
+
 info_dict = {
     'queryset': Calendar.objects.all(),
 }
@@ -64,17 +67,20 @@ url(r'^calendar/(?P<calendar_slug>[-\w]+)/ajax/$',
 
 #Event Urls
 url(r'^event/create/(?P<calendar_slug>[-\w]+)/$',
-    'schedule.views.create_or_edit_event',
-    name='calendar_create_event'),
-url(r'^event/edit/(?P<calendar_slug>[-\w]+)/(?P<event_id>\d+)/$',
-    'schedule.views.create_or_edit_event',
+    'schedule.views.ajax_create_event',
+    name='create_event'),
+url(r'^event/edit/(?P<calendar_slug>[-\w]+)/$',
+    'schedule.views.ajax_edit_event',
     name='edit_event'),
 url(r'^event/(?P<event_id>\d+)/$',
     'schedule.views.event',
     name="event"),
-url(r'^event/delete/(?P<event_id>\d+)/$',
-    DeleteEventView.as_view(),
+url(r'^event/delete/(?P<calendar_slug>[-\w]+)/$',
+    'schedule.views.ajax_delete_event',
     name="delete_event"),
+#url(r'^event/delete/(?P<event_id>\d+)/$',
+#    DeleteEventView.as_view(),
+#    name="delete_event"),
 
 #urls for already persisted occurrences
 url(r'^occurrence/(?P<event_id>\d+)/(?P<occurrence_id>\d+)/$',
@@ -103,4 +109,20 @@ url(r'^feed/calendar/upcoming/(.*)/$', UpcomingEventsFeed(), name='upcoming_even
 url(r'^ical/calendar/(.*)/$', CalendarICalendar(), name='calendar_ical'),
 
 url(r'^$', ListView.as_view(queryset=Calendar.objects.all()), name='schedule'),
+
+# admin urls
+url(r'^admin/', include(admin.site.urls)),
+
+# authentication urls
+url(r'^accounts/login/$', 'django.contrib.auth.views.login', 
+                {
+                    'template_name': 'schedule/auth/login.html',
+                    #'redirect_field_name': '' 
+                }, 
+                name='login'),
+url('^accounts/', include('django.contrib.auth.urls')),
+# url(r'^accounts/login/$', 'django.contrib.auth.views.login', {'template_name': 'schedule/auth/login.html'}),
+# url(r'^accounts/logout/$', 'django.contrib.auth.views.logout'),
+
+
 )

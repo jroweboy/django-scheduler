@@ -1,0 +1,4 @@
+If you want custom login and logout templates, the would be a good location to place them.
+
+The app by default uses the built in django admin templates.
+I have included a sample login.html that is provided on the django website
